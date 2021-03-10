@@ -1,0 +1,4 @@
+#how to make an histogram
+
+ggplot(dat, aes(AGE)) + geom_histogram()
+
