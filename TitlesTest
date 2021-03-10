@@ -1,4 +1,59 @@
-#how to make an histogram
+#SETUP
+
+{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(haven) #uploading SPSS data
+library(car) #for Recoding data
+library(psych) #does a lot of important things
+library(tidyverse) #also does a lot of important things
+library(yarrr)
+library(ltm)
+library(ggplot2)
+library(broom)
+
+full = read_spss("TitlesData.sav")
+
+#MAKE A HISTOGRAM
 
 ggplot(dat, aes(AGE)) + geom_histogram()
 
+#CALCULATE MEAN
+
+mean()
+
+#CALCULATE STANDARD DEVIATION
+
+sd()
+
+#SCREEN PARTICIPANTS
+
+{r screening, echo=FALSE, warning=FALSE}
+#drop everyone who said they were younger than 18
+full$tooyoung = as.vector(Recode(full$S_age, "2=1; 1=0; else = 1"))
+
+#drop everyone not in the U.S.
+full$notUS = as.vector(Recode(full$S_US, "2=1; 1=0; else = 1"))
+
+#convert seconds to complete survey to minutes
+full$time_minutes = as.vector(full$Duration__in_seconds_/60)
+
+#drop people who took more than 90 minutes
+full$tooslow = ifelse(full$time_minutes > 90, 1, 0)
+
+#drop people who took less than 5 minutes
+full$toofast = ifelse(full$time_minutes < 2, 1, 0)
+
+#drop people who missed the attention check
+full$missedcheck = ifelse(full$CHECK == 1, 0, 1)
+
+full$drop = rep(0, nrow(full))
+  full$drop[full$toofast == 1] = 1
+  full$drop[full$tooslow == 1] = 1
+  full$drop[full$tooyoung == 1] = 1
+  full$drop[full$notUS == 1] = 1
+  full$drop[full$missedcheck == 1] = 1
+
+#make a new file named dat, but drop everyone coded as 0
+dat = full%>%
+  filter(drop == 0)
